@@ -16,8 +16,10 @@
  */
 package org.superbiz.moviefun;
 
+import org.apache.cxf.jaxrs.client.WebClient;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.ClassLoaderAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -25,8 +27,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.superbiz.moviefun.rest.MoviesRest;
 
 import javax.ejb.EJB;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -38,10 +47,13 @@ public class MoviesEJBTest {
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
-                .addClasses(Movie.class, MoviesBean.class, MoviesEJBTest.class)
+                .addClasses(Movie.class, MoviesBean.class, MoviesRest.class)
                 .addAsResource(new ClassLoaderAsset("META-INF/ejb-jar.xml"), "META-INF/ejb-jar.xml")
                 .addAsResource(new ClassLoaderAsset("META-INF/persistence.xml"), "META-INF/persistence.xml");
     }
+
+    @ArquillianResource
+    private URL webappUrl;
 
     @EJB
     private MoviesBean movies;
@@ -72,6 +84,56 @@ public class MoviesEJBTest {
         assertEquals(9, moviesFound.get(0).getRating());
         assertEquals("Bad Boys", moviesFound.get(0).getTitle());
         assertEquals(1995, moviesFound.get(0).getYear());
+    }
+
+    @Test
+    public void postAndGet() throws Exception {
+        // POST
+        {
+            final Movie movie = new Movie();
+            movie.setDirector("Steven Spielberg");
+            movie.setGenre("Science fiction");
+            movie.setRating(10);
+            movie.setTitle("E.T. the Extra-Terrestrial");
+            movie.setYear(1982);
+            final WebClient webClient = WebClient.create(webappUrl.toURI());
+            final Response response = webClient.path("movies")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON)
+                    .post(movie);
+
+            assertEquals(201, response.getStatus());
+        }
+
+        // GET
+        {
+            final WebClient webClient = WebClient.create(webappUrl.toURI());
+            final Response response = webClient.path("movies").get();
+
+            assertEquals(200, response.getStatus());
+            assertNotNull(response.getEntity());
+        }
+
+        // GET
+        {
+            final WebClient webClient = WebClient.create(webappUrl.toURI());
+            final Response response = webClient.path("movies/count").get();
+
+            assertEquals(200, response.getStatus());
+            assertNotNull(response.getEntity());
+            assertEquals(String.valueOf(0), slurp((InputStream) response.getEntity()));
+        }
+    }
+
+    public static String slurp(final InputStream in) throws IOException {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[1024];
+        int length;
+        while ((length = in.read(buffer)) != -1) {
+            out.write(buffer, 0, length);
+        }
+        out.flush();
+        return new String(out.toByteArray());
     }
 
 }
