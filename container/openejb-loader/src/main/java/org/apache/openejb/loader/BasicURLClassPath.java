@@ -36,35 +36,13 @@ public abstract class BasicURLClassPath implements ClassPath {
         });
     }
 
-    private Field ucpField;
-    private boolean ucpFieldErrorLogged;
-
     protected void addJarToPath(final URL jar, final URLClassLoader loader) throws Exception {
-        final Object cp = getURLClassPath(loader);
-        if (cp == null && CustomizableURLClassLoader.class.isInstance(loader)) {
+        if (CustomizableURLClassLoader.class.isInstance(loader)) {
             CustomizableURLClassLoader.class.cast(loader).add(jar);
         } else {
-            getAddURLMethod(loader).invoke(cp, jar);
+            DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(loader);
+            dynamicURLClassLoader.addURL(jar);
         }
-    }
-
-    private Method getAddURLMethod(final URLClassLoader loader) {
-        return AccessController.doPrivileged(new PrivilegedAction<Method>() {
-            @Override
-            public Method run() {
-                final Object cp;
-                try {
-                    cp = getURLClassPath(loader);
-                    final Class<?> clazz = cp.getClass();
-                    return clazz.getDeclaredMethod("addURL", URL.class);
-                } catch (final Exception e) {
-                    System.err.println("Can't access addURL from URLClassPath");
-                }
-
-                return null;
-            }
-
-        });
     }
 
     protected synchronized void addJarsToPath(final File dir, final URLClassLoader loader) throws Exception {
@@ -92,54 +70,22 @@ public abstract class BasicURLClassPath implements ClassPath {
             }
         }
 
-        final Object cp = getURLClassPath(loader);
-        if (cp == null && CustomizableURLClassLoader.class.isInstance(loader)) {
+        if (CustomizableURLClassLoader.class.isInstance(loader)) {
             final CustomizableURLClassLoader customizableURLClassLoader = CustomizableURLClassLoader.class.cast(loader);
             for (final URL jar : jars) {
                 customizableURLClassLoader.add(jar);
             }
-        } else if (cp == null && loader != null && CustomizableURLClassLoader.class.getName().equals(loader.getClass().getName())) {
+        } else if (loader != null && CustomizableURLClassLoader.class.getName().equals(loader.getClass().getName())) {
             final Method add = loader.getClass().getMethod("add", URL.class);
             for (final URL jar : jars) {
                 add.invoke(loader, jar);
             }
         } else {
-            final Method addURLMethod = getAddURLMethod(loader);
             for (final URL jar : jars) {
-                addURLMethod.invoke(cp, jar);
+                DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(loader);
+                dynamicURLClassLoader.addURL(jar);
             }
         }
-    }
-
-    protected Object getURLClassPath(final URLClassLoader loader) throws Exception {
-        final Field ucpField = this.getUcpField();
-        if (ucpField == null) {
-            return null;
-        }
-        return ucpField.get(loader);
-    }
-
-    private Field getUcpField() throws Exception {
-        if (ucpField == null) {
-            ucpField = AccessController.doPrivileged(new PrivilegedAction<Field>() {
-                @Override
-                public Field run() {
-                    try {
-                        final Field ucp = URLClassLoader.class.getDeclaredField("ucp");
-                        ucp.setAccessible(true);
-                        return ucp;
-                    } catch (final Exception e2) {
-                        if (!ucpFieldErrorLogged) {
-                            System.err.println("Can't get ucp field of URLClassLoader");
-                            ucpFieldErrorLogged = true;
-                        }
-                    }
-                    return null;
-                }
-            });
-        }
-
-        return ucpField;
     }
 
     protected static class CustomizableURLClassLoader extends URLClassLoader {

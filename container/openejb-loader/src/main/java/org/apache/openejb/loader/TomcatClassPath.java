@@ -144,31 +144,12 @@ public class TomcatClassPath extends BasicURLClassPath {
         }
     }
 
-    private Method getGetURLsMethod() {
-
-        return AccessController.doPrivileged(new PrivilegedAction<Method>() {
-
-            @Override
-            public Method run() {
-                try {
-                    final Object cp = getURLClassPath((URLClassLoader) getClassLoader());
-                    final Class<?> clazz = cp.getClass();
-                    return clazz.getDeclaredMethod("addURL", URL.class);
-                } catch (final Exception e) {
-                    throw new LoaderRuntimeException(e);
-                }
-
-            }
-
-        });
-    }
-
     protected void rebuild() {
         try {
-            final Object cp = getURLClassPath((URLClassLoader) getClassLoader());
-            final Method getURLsMethod = getGetURLsMethod();
+            URLClassLoader classLoader = (URLClassLoader) getClassLoader();
+            final DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(classLoader);
             //noinspection NullArgumentToVariableArgMethod
-            final URL[] urls = (URL[]) getURLsMethod.invoke(cp, (Object) null);
+            final URL[] urls = dynamicURLClassLoader.getURLs();
 
             if (urls.length < 1) {
                 return;
