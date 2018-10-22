@@ -18,7 +18,6 @@ package org.apache.openejb.loader;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -42,6 +41,7 @@ public abstract class BasicURLClassPath implements ClassPath {
         } else {
             DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(loader);
             dynamicURLClassLoader.addURL(jar);
+            dynamicURLClassLoader.close();
         }
     }
 
@@ -84,6 +84,7 @@ public abstract class BasicURLClassPath implements ClassPath {
             for (final URL jar : jars) {
                 DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(loader);
                 dynamicURLClassLoader.addURL(jar);
+                dynamicURLClassLoader.close();
             }
         }
     }

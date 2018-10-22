@@ -83,6 +83,7 @@ public class SystemClassPath extends BasicURLClassPath {
         final URLClassLoader loader = getSystemLoader();
         final DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(loader);
         final URL[] urls = dynamicURLClassLoader.getURLs();
+        dynamicURLClassLoader.close();
 
         if (urls.length < 1) {
             return;

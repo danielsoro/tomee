@@ -150,6 +150,7 @@ public class TomcatClassPath extends BasicURLClassPath {
             final DynamicURLClassLoader dynamicURLClassLoader = new DynamicURLClassLoader(classLoader);
             //noinspection NullArgumentToVariableArgMethod
             final URL[] urls = dynamicURLClassLoader.getURLs();
+            dynamicURLClassLoader.close();
 
             if (urls.length < 1) {
                 return;
