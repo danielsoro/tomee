@@ -17,13 +17,10 @@
 package org.apache.openejb.loader;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 import static org.apache.openejb.loader.JarLocation.jarLocation;
 

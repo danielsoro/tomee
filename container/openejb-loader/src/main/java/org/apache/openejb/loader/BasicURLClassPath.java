@@ -18,12 +18,8 @@ package org.apache.openejb.loader;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Locale;
 
 public abstract class BasicURLClassPath implements ClassPath {
