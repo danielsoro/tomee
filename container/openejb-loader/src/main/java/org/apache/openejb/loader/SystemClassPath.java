@@ -60,11 +60,10 @@ public class SystemClassPath extends BasicURLClassPath {
         }
     }
 
-    private URLClassLoader getSystemLoader() throws Exception {
+    private URLClassLoader getSystemLoader() {
         if (sysLoader == null) {
             final ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-            sysLoader = URLClassLoader.class.isInstance(systemClassLoader) ?
-                    URLClassLoader.class.cast(systemClassLoader) : createCustomizableURLClassLoader(systemClassLoader);
+            sysLoader = createCustomizableURLClassLoader(systemClassLoader);
         }
         return sysLoader;
     }
@@ -80,10 +79,8 @@ public class SystemClassPath extends BasicURLClassPath {
     }
 
     private void rebuildJavaClassPathVariable() throws Exception {
-        final URLClassLoader loader = getSystemLoader();
-        final Object cp = getURLClassPath(loader);
-        final Method getURLsMethod = getGetURLsMethod();
-        final URL[] urls = (URL[]) getURLsMethod.invoke(cp);
+        final CustomizableURLClassLoader cp = getContextClassLoader();
+        final URL[] urls = cp.getURLs();
 
         if (urls.length < 1) {
             return;
@@ -106,29 +103,5 @@ public class SystemClassPath extends BasicURLClassPath {
         } catch (final Exception e) {
             // no-op
         }
-    }
-
-    private Method getGetURLsMethod() {
-        return AccessController.doPrivileged(new PrivilegedAction<Method>() {
-            @Override
-            public Method run() {
-                try {
-                    final URLClassLoader loader = getSystemLoader();
-                    final Object cp = getURLClassPath(loader);
-                    final Class<?> clazz = cp.getClass();
-
-                    try {
-                        return clazz.getDeclaredMethod("getURLs", URL.class);
-                    } catch (final NoSuchMethodException e) {
-                        return clazz.getDeclaredMethod("getURLs");
-                    }
-
-                } catch (final Exception e) {
-                    throw new LoaderRuntimeException(e);
-                }
-
-            }
-
-        });
     }
 }
