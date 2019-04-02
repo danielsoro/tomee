@@ -92,6 +92,7 @@
     <module>injection-of-env-entry</module>
     <module>interceptors</module>
     <module>javamail</module>
+    <module>jaxrs-filter</module>
     <module>jpa-eclipselink</module>
     <module>jpa-hibernate</module>
     <module>jpa-enumerated</module>
@@ -183,6 +184,7 @@
     <module>websocket-tls-basic-auth</module>
     <module>concurrency-utils</module>
     <module>mvc-cxf</module>
+    <module>mvc-cxf-hibernate</module>
     <module>mp-rest-client</module>
     <module>mvc-resteasy</module>
     <module>mp-custom-healthcheck</module>
