@@ -36,6 +36,7 @@
         <!-- Updated version to fix hanging text -->
         <version>2.22.0</version>
         <configuration>
+          <!-- TODO - Requires the JsonB JAX-RS Provider -->
           <dependenciesToScan>
             <dependency>org.eclipse.microprofile.openapi:microprofile-openapi-tck</dependency>
           </dependenciesToScan>
